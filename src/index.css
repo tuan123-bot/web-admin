@@ -1,0 +1,244 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+/* AdminDashboard.css 
+  Kiểu dáng được chuyển đổi từ Tailwind CSS sang CSS thuần 
+*/
+
+/* Reset cơ bản và Font */
+body {
+  font-family: "Inter", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* 1. Vùng chứa Chính (Dashboard Container) */
+.dashboard-container {
+  min-height: 100vh;
+  background-color: #f3f4f6; /* gray-100 */
+  padding: 2rem 1rem; /* p-4 sm:p-8 */
+}
+
+/* 2. Phần Header */
+.header-title {
+  font-size: 2.25rem; /* text-4xl */
+  font-weight: 800; /* font-extrabold */
+  color: #4f46e5; /* indigo-700 */
+  margin-bottom: 0.5rem; /* mb-2 */
+}
+
+.header-subtitle {
+  color: #6b7280; /* gray-500 */
+  font-size: 1.125rem; /* text-lg */
+}
+
+/* 3. Thẻ Main (Main Card) */
+.main-card {
+  background-color: white;
+  padding: 1.5rem; /* p-6 */
+  border-radius: 0.75rem; /* rounded-xl */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04); /* shadow-2xl */
+}
+
+/* 4. Thanh Tìm kiếm */
+.search-input {
+  padding: 0.75rem; /* p-3 */
+  border: 1px solid #d1d5db; /* border-gray-300 */
+  border-radius: 0.75rem; /* rounded-xl */
+  width: 100%;
+  max-width: 32rem; /* max-w-lg */
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); /* shadow-inner */
+  transition: all 0.15s ease-in-out;
+}
+
+.search-input:focus {
+  border-color: #6366f1; /* indigo-500 */
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
+}
+
+/* 5. Tiêu đề Bảng */
+.table-title {
+  font-size: 1.5rem; /* text-2xl */
+  font-weight: 600; /* font-semibold */
+  color: #1f2937; /* gray-800 */
+  margin-bottom: 1rem; /* mb-4 */
+  border-bottom: 1px solid #e5e7eb; /* border-b pb-2 */
+  padding-bottom: 0.5rem;
+}
+
+/* 6. Bảng Dữ liệu */
+.table-wrapper {
+  overflow-x: auto;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1); /* shadow-md */
+  border-radius: 0.5rem; /* rounded-lg */
+}
+
+.user-table {
+  min-width: 100%;
+  border-collapse: collapse;
+}
+
+.table-header {
+  background-color: #eef2ff; /* indigo-50 */
+}
+
+.table-header th {
+  padding: 0.75rem 1.5rem; /* px-6 py-3 */
+  text-align: left;
+  font-size: 0.75rem; /* text-xs */
+  font-weight: 500; /* font-medium */
+  color: #6b7280; /* gray-500 */
+  text-transform: uppercase;
+  letter-spacing: 0.05em; /* tracking-wider */
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table-body tr {
+  border-bottom: 1px solid #e5e7eb;
+  background-color: white;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.table-body tr:hover {
+  background-color: #f5f5ff; /* indigo-50 on hover */
+}
+
+.table-body td {
+  padding: 1rem 1.5rem; /* px-6 py-4 */
+  white-space: nowrap;
+  font-size: 0.875rem; /* text-sm */
+  color: #1f2937; /* gray-900 */
+}
+
+.col-name {
+  color: #374151; /* gray-700 */
+}
+
+.col-email {
+  color: #4f46e5; /* indigo-600 */
+  font-family: monospace;
+}
+
+.col-date {
+  color: #6b7280; /* gray-500 */
+}
+
+/* 7. Loading và Error */
+.loading-message {
+  text-align: center;
+  padding: 3rem;
+  color: #4f46e5; /* indigo-600 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.error-alert {
+  background-color: #fee2e2; /* red-100 */
+  border: 1px solid #f87171; /* border-red-400 */
+  color: #b91c1c; /* red-700 */
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.no-results {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+}
+
+.no-results h3 {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.no-results p {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Animation cho Loading Spinner */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
