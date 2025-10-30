@@ -6,7 +6,9 @@ const AddProductFormModal = ({ isOpen, onClose, onAddProduct }) => {
     title: "",
     price: "",
     description: "",
-    thumbnail: "", // 🚨 ĐÃ THÊM: Trường thumbnail cho URL hình ảnh
+    thumbnail: "",
+    // ✅ ĐÃ THÊM: Trường stock (Tồn kho)
+    stock: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
@@ -15,10 +17,16 @@ const AddProductFormModal = ({ isOpen, onClose, onAddProduct }) => {
 
   const handleChange = (e) => {
     const fieldName = e.target.name;
-    const value =
-      fieldName === "price"
-        ? e.target.value.replace(/[^0-9.]/g, "")
-        : e.target.value;
+    let value = e.target.value;
+
+    // Chỉ cho phép nhập số (và dấu chấm) cho Price
+    if (fieldName === "price") {
+      value = value.replace(/[^0-9.]/g, "");
+    }
+    // ✅ CHỈ CHO PHÉP NHẬP SỐ NGUYÊN cho Stock
+    if (fieldName === "stock") {
+      value = value.replace(/[^0-9]/g, "");
+    }
 
     setFormData({ ...formData, [fieldName]: value });
     setFormError("");
@@ -28,16 +36,20 @@ const AddProductFormModal = ({ isOpen, onClose, onAddProduct }) => {
     e.preventDefault();
 
     const priceValue = parseFloat(formData.price);
+    const stockValue = parseInt(formData.stock); // ✅ Chuyển Stock sang số nguyên
 
+    // ✅ KIỂM TRA TẤT CẢ CÁC TRƯỜNG BẮT BUỘC
     if (
       !formData.title ||
       !formData.description ||
+      !formData.thumbnail ||
       isNaN(priceValue) ||
       priceValue <= 0 ||
-      !formData.thumbnail // 🚨 ĐÃ THÊM: Kiểm tra thumbnail cũng là bắt buộc
+      isNaN(stockValue) || // ✅ Kiểm tra Stock là số hợp lệ
+      stockValue < 0 // ✅ Kiểm tra Stock không âm
     ) {
       setFormError(
-        "Vui lòng nhập đầy đủ Tên, Mô tả, Giá (> 0) và URL Hình ảnh."
+        "Vui lòng nhập đầy đủ Tên, Mô tả, Giá (> 0), URL Hình ảnh và Tồn kho (>= 0)."
       );
       return;
     }
@@ -46,10 +58,21 @@ const AddProductFormModal = ({ isOpen, onClose, onAddProduct }) => {
     setFormError("");
 
     try {
-      await onAddProduct({ ...formData, price: priceValue });
+      // ✅ Truyền giá trị đã được chuyển đổi sang số
+      await onAddProduct({
+        ...formData,
+        price: priceValue,
+        stock: stockValue,
+      });
 
-      // Reset form
-      setFormData({ title: "", price: "", description: "", thumbnail: "" });
+      // Reset form (thêm stock vào reset)
+      setFormData({
+        title: "",
+        price: "",
+        description: "",
+        thumbnail: "",
+        stock: "",
+      });
       onClose();
     } catch (error) {
       setFormError(error.message || "Lỗi không xác định khi thêm sản phẩm.");
@@ -122,6 +145,24 @@ const AddProductFormModal = ({ isOpen, onClose, onAddProduct }) => {
               value={formData.thumbnail}
               onChange={handleChange}
               placeholder="Ví dụ: https://example.com/images/laptop.jpg"
+              disabled={submitting}
+            />
+          </div>
+
+          {/* ✅ TRƯỜNG TỒN KHO (STOCK) MỚI */}
+          <div style={{ marginBottom: "16px" }}>
+            <label style={formStyles.label} htmlFor="stock">
+              Tồn Kho:
+            </label>
+            <input
+              style={formStyles.input}
+              type="text"
+              pattern="[0-9]*"
+              id="stock"
+              name="stock"
+              value={formData.stock}
+              onChange={handleChange}
+              placeholder="Ví dụ: 15"
               disabled={submitting}
             />
           </div>

@@ -30,7 +30,8 @@ const ProductRow = ({ product, handleOpenDeleteModal }) => {
           color: "#1F2937",
         }}
       >
-        {product.name || "Chưa cập nhật"}
+        {/* ✅ SỬA LỖI: Sử dụng product.title thay vì product.name */}
+        {product.title || "Chưa cập nhật"}
       </td>
       <td style={{ ...styles.td, color: "#10B981", fontWeight: "700" }}>
         {formattedPrice}
