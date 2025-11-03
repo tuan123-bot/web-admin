@@ -1,184 +1,127 @@
-import React, { useState, useEffect } from "react";
-import { Table, Tag, Button, Alert, Spin, Modal } from "antd";
-import { DeleteOutlined, UserSwitchOutlined } from "@ant-design/icons";
-import "./UserManagement.css";
+// components/UserManagement.tsx
 
-// Giả định URL backend
-const API_URL = "http://localhost:5000/api/users";
+import React, { useState, useEffect, useCallback } from "react";
+import axios from "axios";
 
+// Định nghĩa Interface cho Người dùng
 interface User {
   _id: string;
   name: string;
   email: string;
-  role: "user" | "admin";
+  isAdmin: boolean;
   createdAt: string;
-  isBlocked: boolean;
 }
 
-const UserManagement = () => {
+const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
-  // --- 🎯 HÀM GỌI API LẤY DANH SÁCH NGƯỜI DÙNG ---
-  const fetchUsers = async () => {
+  const API_USERS_URL = "http://localhost:5000/api/users"; // API backend của bạn
+
+  // 1. Hàm Tải Danh sách Người dùng
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
-      const response = await fetch(API_URL);
-      if (!response.ok) {
-        throw new Error("Lỗi khi tải danh sách người dùng.");
-      }
-      const data = await response.json();
-
-      const processedUsers = (data.users || data).map((u: User) => ({
-        ...u,
-        key: u._id, // Thêm key
-      }));
-
-      setUsers(processedUsers);
-    } catch (err: any) {
-      console.error(err);
-      setError("Không thể tải người dùng. Vui lòng kiểm tra API Server.");
+      // Gọi API GET /api/users (đã bỏ protect ở backend)
+      const response = await axios.get<User[]>(API_USERS_URL);
+      setUsers(response.data);
+      setError("");
+    } catch (err) {
+      console.error("Lỗi khi tải người dùng:", err);
+      setError(
+        "Không thể tải danh sách người dùng. Vui lòng kiểm tra Server Backend."
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
-  // --- 🎯 HÀM XỬ LÝ KHÓA/MỞ KHÓA NGƯỜI DÙNG (Giả định) ---
-  const handleBlockToggle = (userId: string, isCurrentlyBlocked: boolean) => {
-    Modal.confirm({
-      title: isCurrentlyBlocked
-        ? "Xác nhận Mở khóa"
-        : "Xác nhận Khóa tài khoản",
-      content: `Bạn có chắc chắn muốn ${
-        isCurrentlyBlocked ? "mở khóa" : "khóa"
-      } tài khoản này?`,
-      okText: isCurrentlyBlocked ? "Mở khóa" : "Khóa",
-      okType: isCurrentlyBlocked ? "default" : "danger",
-      cancelText: "Hủy",
-      onOk: async () => {
-        setLoading(true);
-        try {
-          // Giả định API cho chức năng khóa/mở khóa
-          const response = await fetch(`${API_URL}/${userId}/block`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ isBlocked: !isCurrentlyBlocked }),
-          });
+  // 2. Hàm Xóa Người dùng
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (
+      !window.confirm(
+        `Bạn có chắc chắn muốn xóa người dùng "${userName}" không? Thao tác này không thể hoàn tác!`
+      )
+    ) {
+      return;
+    }
 
-          if (!response.ok) {
-            throw new Error("Thao tác thất bại.");
-          }
-          await fetchUsers();
-        } catch (err: any) {
-          Modal.error({ title: "Lỗi", content: err.message });
-        } finally {
-          setLoading(false);
-        }
-      },
-    });
+    try {
+      // Gọi API DELETE /api/users/:id (deleteUser)
+      await axios.delete(`${API_USERS_URL}/${userId}`);
+
+      // Cập nhật state (loại bỏ người dùng khỏi danh sách)
+      setUsers(users.filter((user) => user._id !== userId));
+      alert(`Người dùng "${userName}" đã được xóa thành công!`);
+    } catch (err) {
+      console.error("Lỗi khi xóa người dùng:", err);
+      alert("Lỗi khi xóa người dùng. Kiểm tra quyền và API DELETE.");
+    }
   };
 
-  // --- CỘT CHO BẢNG NGƯỜI DÙNG ---
-  const columns = [
-    {
-      title: "ID",
-      dataIndex: "_id",
-      key: "_id",
-      render: (text: string) => text.substring(0, 8) + "...",
-    },
-    {
-      title: "Tên Người Dùng",
-      dataIndex: "name",
-      key: "name",
-      render: (text: string) => <strong>{text}</strong>,
-    },
-    { title: "Email", dataIndex: "email", key: "email" },
-    {
-      title: "Vai trò",
-      dataIndex: "role",
-      key: "role",
-      render: (role: "user" | "admin") => (
-        <Tag color={role === "admin" ? "volcano" : "geekblue"}>
-          {role.toUpperCase()}
-        </Tag>
-      ),
-    },
-    {
-      title: "Trạng thái",
-      dataIndex: "isBlocked",
-      key: "isBlocked",
-      render: (isBlocked: boolean) => (
-        <Tag color={isBlocked ? "red" : "green"}>
-          {isBlocked ? "Đã khóa" : "Hoạt động"}
-        </Tag>
-      ),
-    },
-    {
-      title: "Ngày đăng ký",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (date: string) => new Date(date).toLocaleDateString("vi-VN"),
-    },
-    {
-      title: "Thao Tác",
-      key: "action",
-      render: (_: any, record: User) => (
-        <div style={{ display: "flex", gap: 8 }}>
-          <Button
-            icon={<UserSwitchOutlined />}
-            size="small"
-            danger={!record.isBlocked}
-            onClick={() => handleBlockToggle(record._id, record.isBlocked)}
-          >
-            {record.isBlocked ? "Mở Khóa" : "Khóa"}
-          </Button>
-          {/* Nút xóa vĩnh viễn (chỉ cho admin) */}
-          <Button
-            icon={<DeleteOutlined />}
-            size="small"
-            disabled={record.role === "admin"} // Không cho xóa admin
-            danger
-            onClick={() =>
-              Modal.error({
-                title: "Cảnh báo",
-                content: "Chức năng xóa vĩnh viễn chưa được triển khai",
-              })
-            }
-          >
-            Xóa
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  if (loading) return <div>Đang tải danh sách người dùng...</div>;
+  if (error)
+    return <div style={{ color: "red", padding: "20px" }}>Lỗi: {error}</div>;
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2 style={{ marginBottom: 20 }}>👤 Quản Lý Người Dùng</h2>
+    <div className="user-management">
+      <h2>👥 Quản lý Người dùng ({users.length} tài khoản)</h2>
 
-      {error && (
-        <Alert
-          message="Lỗi"
-          description={error}
-          type="error"
-          showIcon
-          style={{ marginBottom: 20 }}
-        />
+      {users.length === 0 ? (
+        <p>Không có người dùng nào được đăng ký.</p>
+      ) : (
+        <table className="user-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tên</th>
+              <th>Email</th>
+              <th>Admin</th>
+              <th>Ngày tham gia</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user._id}>
+                <td>{user._id.substring(0, 8)}...</td>
+                <td>{user.name}</td>
+                <td>{user.email}</td>
+                <td>
+                  {user.isAdmin ? (
+                    <span style={{ color: "green", fontWeight: "bold" }}>
+                      ✅ CÓ
+                    </span>
+                  ) : (
+                    <span style={{ color: "red" }}>❌ KHÔNG</span>
+                  )}
+                </td>
+                <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                <td>
+                  <button
+                    onClick={() => handleDeleteUser(user._id, user.name)}
+                    // Không cho phép Admin tự xóa chính mình hoặc Admin khác (cần logic phức tạp hơn)
+                    disabled={user.isAdmin}
+                    style={{
+                      padding: "5px 10px",
+                      backgroundColor: "red",
+                      color: "white",
+                      border: "none",
+                    }}
+                  >
+                    🗑️ Xóa
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
-
-      <Table
-        columns={columns}
-        dataSource={users}
-        rowKey="_id"
-        pagination={{ pageSize: 10 }}
-        loading={loading}
-      />
     </div>
   );
 };

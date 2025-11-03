@@ -1,0 +1,32 @@
+/* AppLayout.css */
+
+.admin-wrapper {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f4f7f9; /* Màu nền nhẹ cho toàn bộ admin */
+}
+
+.main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-header {
+  background-color: #ffffff;
+  padding: 15px 30px;
+  border-bottom: 1px solid #e0e6ed;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.admin-header h1 {
+  margin: 0;
+  font-size: 1.5em;
+  color: #333; /* Đảm bảo màu chữ tiêu đề là tối */
+}
+
+.page-wrapper {
+  padding: 30px;
+  flex-grow: 1;
+  background-color: white; /* BẮT BUỘC: Đảm bảo nền nội dung chính là trắng */
+}

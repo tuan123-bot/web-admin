@@ -1,0 +1,144 @@
+/* Modal.css (Và CSS chung cho bảng) */
+
+/* --- Modal CSS (Đã sửa lỗi trùng màu chữ) --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  color: #333; /* Đảm bảo chữ trong Modal là màu tối */
+  padding: 30px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content label {
+  display: block;
+  margin-top: 15px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+/* SỬA LỖI CHỮ TRONG INPUT: Bắt buộc set màu chữ thành đen */
+.modal-content input[type="text"],
+.modal-content input[type="number"],
+.modal-content input[type="file"],
+.modal-content textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  color: #000; /* BẮT BUỘC: Màu chữ đen */
+  background-color: #fff; /* Nền trắng */
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+/* Nút trong Modal */
+.modal-actions button {
+  padding: 0.6em 1.2em;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  transition: background-color 0.2s;
+}
+
+/* Nút Hủy */
+.modal-actions button[type="button"] {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+/* Nút Submit */
+.modal-actions button[type="submit"] {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+/* --- Bảng CSS chung (Đã sửa lỗi chữ bị ẩn/tràn) --- */
+
+.product-management h2,
+.order-management h2,
+.user-management h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  color: #333; /* Màu chữ mặc định cho bảng */
+}
+
+thead th {
+  background-color: #3498db;
+  color: white;
+  padding: 12px 15px;
+  text-align: left;
+}
+
+tbody tr {
+  border-bottom: 1px solid #eee;
+}
+
+tbody tr:nth-of-type(even) {
+  background-color: #f9f9f9;
+}
+
+tbody td {
+  padding: 12px 15px;
+  vertical-align: middle;
+  color: #333; /* Đảm bảo màu chữ là tối */
+
+  /* SỬA LỖI CHỮ BỊ ẨN/TRÀN */
+  white-space: normal;
+  word-break: break-word;
+  max-width: 250px;
+}
+
+/* --- Status Colors (Cho OrderManagement) --- */
+.status-pending {
+  color: #f39c12;
+  font-weight: bold;
+}
+.status-processing {
+  color: #2980b9;
+  font-weight: bold;
+}
+.status-shipped {
+  color: #3498db;
+  font-weight: bold;
+}
+.status-delivered {
+  color: #27ae60;
+  font-weight: bold;
+}
+.status-cancelled {
+  color: #e74c3c;
+  font-weight: bold;
+}

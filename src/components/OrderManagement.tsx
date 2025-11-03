@@ -1,245 +1,166 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import axios from "axios";
 
-// Giả định Ant Design đã được cài đặt. Nếu không, thay thế bằng HTML cơ bản.
-import { Table, Tag, Button, Alert, Spin, Descriptions, Modal } from "antd";
-import "./OrderManagement.css"; // Tùy chọn: tạo file CSS nếu cần
-
-// Định nghĩa URL Backend của bạn
-// VÍ DỤ: Cần thay thế bằng địa chỉ server thực tế của bạn
-const API_URL = "http://localhost:5000/api/orders";
-
-// --- ĐỊNH NGHĨA KIỂU DỮ LIỆU ĐƠN HÀNG ---
-interface Order {
-  _id: string; // ID đơn hàng
-  customerName: string;
-  customerPhone: string;
-  deliveryAddress: string;
-  totalAmount: number;
-  paymentMethod: string;
-  status: "Pending" | "Confirmed" | "Shipped" | "Cancelled";
-  timestamp: string;
-  items: { title: string; price: number }[];
+// 🧩 Kiểu dữ liệu Đơn hàng (đồng bộ Backend)
+interface OrderItem {
+  name: string;
+  qty: number;
+  price: number;
 }
 
-const OrderManagement = () => {
+type OrderStatus =
+  | "Pending"
+  | "Processing"
+  | "Shipped"
+  | "Delivered"
+  | "Cancelled"
+  | "Confirmed";
+
+interface Order {
+  _id: string;
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  orderItems: OrderItem[];
+  shippingAddress: {
+    address: string;
+    city: string;
+  };
+  totalAmount: number;
+  isPaid: boolean;
+  status: OrderStatus;
+  createdAt: string;
+}
+
+const OrderManagement: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [error, setError] = useState("");
+  const API_ORDERS_URL = "http://localhost:5000/api/orders";
 
-  // 🎯 1. HÀM GỌI API LẤY DANH SÁCH ĐƠN HÀNG
-  const fetchOrders = async () => {
+  // 🧠 Lấy danh sách đơn hàng
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
-      const response = await fetch(API_URL);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Lỗi khi tải đơn hàng.");
+      const response = await axios.get<Order[]>(API_ORDERS_URL);
+      if (Array.isArray(response.data)) {
+        setOrders(
+          response.data.sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )
+        );
+      } else {
+        setOrders([]);
       }
-      const data = await response.json();
-
-      // ✅ Giả định server trả về mảng đơn hàng TRỰC TIẾP
-      // Nếu server trả về { data: [...] }, bạn dùng: setOrders(data.data);
-      // Chúng ta cần thêm trường 'key' cho Ant Design Table (nếu cần)
-      const processedOrders = (data.orders || data).map((order: Order) => ({
-        ...order,
-        key: order._id,
-      }));
-
-      setOrders(processedOrders);
+      setError("");
     } catch (err: any) {
-      console.error(err);
-      setError("Không thể tải đơn hàng. Vui lòng kiểm tra API Server.");
+      console.error(
+        "Lỗi khi tải đơn hàng:",
+        err.response?.data?.message || err.message
+      );
+      setError("Không thể tải danh sách đơn hàng. Kiểm tra Server Backend.");
     } finally {
       setLoading(false);
     }
-  };
-
-  // 🎯 2. HÀM CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG
-  const updateOrderStatus = async (
-    orderId: string,
-    newStatus: Order["status"]
-  ) => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/${orderId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Cập nhật thất bại. Server không phản hồi OK.");
-      }
-
-      // Cập nhật thành công, tải lại danh sách đơn hàng
-      fetchOrders();
-    } catch (err: any) {
-      alert("Lỗi cập nhật trạng thái: " + err.message);
-      setLoading(false);
-    }
-  };
+  }, []);
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [fetchOrders]);
 
-  // Hàm hiển thị chi tiết đơn hàng
-  const showOrderDetails = (order: Order) => {
-    setSelectedOrder(order);
-    setIsModalVisible(true);
+  // ⚙️ Cập nhật trạng thái đơn hàng
+  const handleUpdateStatus = async (
+    orderId: string,
+    newStatus: OrderStatus
+  ) => {
+    if (
+      !window.confirm(
+        `Cập nhật trạng thái đơn hàng ${orderId} thành "${newStatus}"?`
+      )
+    )
+      return;
+    try {
+      await axios.put(`${API_ORDERS_URL}/${orderId}`, { status: newStatus });
+      alert(`Đơn hàng ${orderId} đã được cập nhật!`);
+      fetchOrders();
+    } catch (err: any) {
+      console.error(
+        "Lỗi cập nhật trạng thái:",
+        err.response?.data?.message || err.message
+      );
+      alert("Không thể cập nhật trạng thái đơn hàng.");
+    }
   };
 
-  // --- CỘT CHO BẢNG DANH SÁCH ĐƠN HÀNG ---
-  const columns = [
-    {
-      title: "Mã ĐH",
-      dataIndex: "_id",
-      key: "_id",
-      render: (text: string) => (
-        <a
-          onClick={() => showOrderDetails(orders.find((o) => o._id === text)!)}
-        >
-          {text.substring(0, 8)}...
-        </a>
-      ),
-    },
-    {
-      title: "Khách Hàng",
-      dataIndex: "customerName",
-      key: "customerName",
-    },
-    {
-      title: "Tổng Tiền",
-      dataIndex: "totalAmount",
-      key: "totalAmount",
-      render: (amount: number) => `${amount.toLocaleString("vi-VN")} VND`,
-    },
-    {
-      title: "Trạng Thái",
-      dataIndex: "status",
-      key: "status",
-      render: (status: Order["status"]) => {
-        let color = "gold";
-        if (status === "Confirmed") color = "blue";
-        if (status === "Shipped") color = "green";
-        if (status === "Cancelled") color = "red";
-        return <Tag color={color}>{status}</Tag>;
-      },
-    },
-    {
-      title: "Thao Tác",
-      key: "action",
-      render: (_: any, record: Order) => (
-        <div style={{ display: "flex", gap: 5 }}>
-          <Button
-            type="primary"
-            size="small"
-            disabled={record.status !== "Pending"}
-            onClick={() => updateOrderStatus(record._id, "Confirmed")}
-          >
-            Xác Nhận
-          </Button>
-          <Button
-            type="default"
-            size="small"
-            danger
-            disabled={
-              record.status === "Cancelled" || record.status === "Shipped"
-            }
-            onClick={() => updateOrderStatus(record._id, "Cancelled")}
-          >
-            Hủy
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  // 💰 Định dạng tiền tệ
+  const formatCurrency = (amount: number | null | undefined) =>
+    (amount || 0).toLocaleString("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    });
+
+  if (loading) return <div>Đang tải danh sách đơn hàng...</div>;
+  if (error)
+    return <div style={{ color: "red", padding: "20px" }}>Lỗi: {error}</div>;
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2 style={{ marginBottom: 20 }}>Quản Lý Đơn Hàng</h2>
+    <div className="order-management">
+      <h2>📦 Quản lý Đơn hàng ({orders.length} đơn)</h2>
 
-      {loading && (
-        <Spin
-          tip="Đang tải dữ liệu..."
-          size="large"
-          style={{ display: "block", margin: "20px auto" }}
-        />
-      )}
-      {error && (
-        <Alert
-          message="Lỗi"
-          description={error}
-          type="error"
-          showIcon
-          style={{ marginBottom: 20 }}
-        />
-      )}
-
-      <Table
-        columns={columns}
-        dataSource={orders}
-        rowKey="_id"
-        pagination={{ pageSize: 10 }}
-        loading={loading}
-      />
-
-      {/* Modal Chi tiết đơn hàng */}
-      {selectedOrder && (
-        <Modal
-          title={`Chi tiết Đơn hàng: ${selectedOrder._id.substring(0, 10)}...`}
-          visible={isModalVisible}
-          onCancel={() => setIsModalVisible(false)}
-          footer={[
-            <Button key="close" onClick={() => setIsModalVisible(false)}>
-              Đóng
-            </Button>,
-          ]}
-        >
-          <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="Khách hàng">
-              {selectedOrder.customerName}
-            </Descriptions.Item>
-            <Descriptions.Item label="SĐT">
-              {selectedOrder.customerPhone}
-            </Descriptions.Item>
-            <Descriptions.Item label="Địa chỉ">
-              {selectedOrder.deliveryAddress}
-            </Descriptions.Item>
-            <Descriptions.Item label="P.Thức TT">
-              {selectedOrder.paymentMethod}
-            </Descriptions.Item>
-            <Descriptions.Item label="Tổng tiền">
-              {selectedOrder.totalAmount.toLocaleString("vi-VN")} VND
-            </Descriptions.Item>
-            <Descriptions.Item label="Trạng thái">
-              <Tag
-                color={selectedOrder.status === "Confirmed" ? "blue" : "gold"}
-              >
-                {selectedOrder.status}
-              </Tag>
-            </Descriptions.Item>
-          </Descriptions>
-
-          <h4 style={{ marginTop: 15 }}>Sản phẩm:</h4>
-          <Table
-            dataSource={selectedOrder.items}
-            columns={[
-              { title: "Tên SP", dataIndex: "title" },
-              {
-                title: "Giá",
-                dataIndex: "price",
-                render: (p: number) => `${p.toLocaleString("vi-VN")} VND`,
-              },
-            ]}
-            pagination={false}
-            size="small"
-            rowKey="title" // Giả định tên sản phẩm là duy nhất trong đơn hàng
-          />
-        </Modal>
+      {orders.length === 0 ? (
+        <p>Không có đơn hàng nào.</p>
+      ) : (
+        <table className="order-table">
+          <thead>
+            <tr>
+              <th>ID ĐH</th>
+              <th>Khách hàng</th>
+              <th>Tổng tiền</th>
+              <th>Trạng thái</th>
+              <th>Ngày đặt</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map((order) => (
+              <tr key={order._id}>
+                <td>{order._id.slice(0, 8)}...</td>
+                <td>
+                  <strong>{order.user?.name || "Khách vãng lai"}</strong>
+                  <br />
+                  <small>({order.user?.email || "N/A"})</small>
+                </td>
+                <td>{formatCurrency(order.totalAmount)}</td>
+                <td>
+                  <span className={`status-${order.status.toLowerCase()}`}>
+                    {order.status}
+                  </span>
+                </td>
+                <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                <td>
+                  <select
+                    value={order.status}
+                    onChange={(e) =>
+                      handleUpdateStatus(
+                        order._id,
+                        e.target.value as OrderStatus
+                      )
+                    }
+                  >
+                    <option value="Pending">Chờ xử lý</option>
+                    <option value="Confirmed">Đã xác nhận</option>
+                    <option value="Shipped">Đã giao hàng</option>
+                    <option value="Delivered">Đã nhận hàng</option>
+                    <option value="Cancelled">Đã hủy</option>
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );
